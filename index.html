@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Command Discovery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Command Discovery</h1>
+        <p>This page exposes internal functions to the global scope.</p>
+        
+        <div class="status-panel">
+            <div id="last-command">Waiting for command...</div>
+        </div>
+
+        <div class="info-box">
+            <h3>Exposed Functions:</h3>
+            <ul id="function-list">
+                <!-- Populated by JS -->
+            </ul>
+        </div>
+
+        <div class="console-guide">
+            <h3>How to use:</h3>
+            <p>Open your browser's Developer Console.</p>
+            <p><strong>Option 1:</strong> Select this iframe in the console context dropdown (often labeled "top" by default, look for the frame URL).</p>
+            <p><strong>Option 2:</strong> In the top frame, find this iframe element and access <code>.contentWindow</code>.</p>
+            <pre id="snippet-preview">awaiting inspection...</pre>
+        </div>
+    </div>
+
+    <!-- Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "confetti": "https://esm.sh/canvas-confetti"
+            }
+        }
+    </script>
+
+    <script type="module" src="./main.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+

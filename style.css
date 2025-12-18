@@ -1,0 +1,98 @@
+:root {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --accent-color: #00ff9d;
+    --panel-bg: #2d2d2d;
+    --code-bg: #111;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+    transition: background-color 0.3s ease;
+}
+
+#app {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1 {
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+
+.status-panel {
+    background: var(--panel-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid var(--accent-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+#last-command {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.info-box, .console-guide {
+    background: var(--panel-bg);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background: rgba(0,0,0,0.2);
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li .arg-type {
+    color: #888;
+    font-size: 0.8em;
+}
+
+pre {
+    background: var(--code-bg);
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid #444;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+code {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* Toast animation for visual feedback */
+@keyframes flash {
+    0% { background-color: var(--accent-color); color: #000; }
+    100% { background-color: var(--bg-color); color: var(--text-color); }
+}
+
+.flashing {
+    animation: flash 0.5s ease-out;
+}
+
