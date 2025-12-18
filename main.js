@@ -44,9 +44,31 @@ function getRandomColor() {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// Setup listener for cross-origin messages (PostMessage)
+function setupPostMessageListener() {
+    window.addEventListener('message', (event) => {
+        const data = event.data;
+        // Basic validation: must have a 'command' property
+        if (!data || typeof data.command !== 'string') return;
+
+        const cmdName = data.command;
+        const fn = Commands[cmdName];
+
+        if (fn) {
+            console.log(`%c[PostMessage] Executing: ${cmdName}`, "color: #00ff9d; font-weight: bold;");
+            // Normalize args: ensure it's an array
+            const args = Array.isArray(data.args) ? data.args : [data.args].filter(a => a !== undefined);
+            fn(...args);
+        } else {
+            console.warn(`[PostMessage] Unknown command ignored: ${cmdName}`);
+        }
+    });
+}
+
 // Initialization
 (function init() {
     exposeCommands();
+    setupPostMessageListener();
     buildUI();
     
     // Slight delay to ensure console is ready/visible if user opens it
