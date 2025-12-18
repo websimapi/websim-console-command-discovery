@@ -11,11 +11,9 @@ const state = {
     }
 };
 
-// Dispatch event to update UI
-function updateUI(action, data) {
-    window.dispatchEvent(new CustomEvent('hub-update', { 
-        detail: { action, data, state } 
-    }));
+// Helper to print state to console prettily
+function printState(type, data) {
+    // We strictly use console logs now
 }
 
 const world = {
@@ -61,33 +59,35 @@ const s = {
 // --- Helper Functions ---
 function log(msg, style = '') {
     console.log(`%c${msg}`, style);
-    updateUI('log', msg); // Send to UI
 }
 
 function renderRoom() {
     playBeep(300);
     const room = world[state.location];
     
-    // UI Update
-    updateUI('location', state.location);
+    console.log('%c___________________________________________________________', 'color: #333');
+    console.log(`%c 📍 LOCATION: ${room.title} `, s.title);
     
-    console.group(`%c 📍 ${room.title} `, s.title);
+    console.group('Environment Scan');
     log(room.desc, s.desc);
+    console.groupEnd();
 
     // Items
     if (room.items && room.items.length > 0) {
-        log(`OBJECTS DETECTED: ${room.items.join(', ')}`, s.item);
+        console.log(" ");
+        log(`🔎 OBJECTS DETECTED: [ ${room.items.join(' ] [ ')} ]`, s.item);
     }
 
     // Exits
     const exitList = Object.keys(room.exits).map(d => d.toUpperCase()).join(' | ');
-    log(`NAVIGATION PORTS: [ ${exitList} ]`, s.dir);
+    console.log(" ");
+    log(`🧭 NAVIGATION PORTS: ${exitList}`, s.dir);
     
     if (room.locked) {
-        log("⚠️ SECURITY LOCK ACTIVE", s.error);
+        log("🔒 SECURITY LOCK ACTIVE: Access Restricted", s.error);
     }
-
-    console.groupEnd();
+    
+    console.log('%c___________________________________________________________', 'color: #333');
 }
 
 // --- Exposed Commands ---
@@ -127,8 +127,7 @@ export function take(item) {
         room.items.splice(index, 1);
         state.inventory.push(item);
         playSuccessSound();
-        log(`Acquired: ${item}`, s.success);
-        updateUI('inventory', state.inventory);
+        console.log(`%c[SYSTEM]: Variable '${item}' hoisted to local scope.`, s.success);
         return `Object ${item} stored in memory.`;
     }
     
@@ -190,14 +189,13 @@ export function interact() {
         state.flags.uplinkEstablished = true;
         
         console.clear();
-        const style = "font-size: 20px; color: #00ff9d; background: #000; padding: 10px; border: 2px solid #00ff9d;";
-        console.log("%c UPLINK ESTABLISHED SUCCESSFULLY ", style);
-        console.log("Monitoring Hub is now ONLINE.");
+        const style = "font-size: 20px; color: #00ff9d; background: #000; padding: 20px; border: 2px solid #00ff9d; display: block;";
+        console.log("%c 🟢 UPLINK ESTABLISHED SUCCESSFULLY ", style);
+        console.log("%c\n[SYSTEM MESSAGE]: SECURE CONNECTION ESTABLISHED.\n[SYSTEM MESSAGE]: YOU HAVE COMPLETED THE CONTEXT CHALLENGE.", "color: #00ff9d; font-size: 14px;");
         
         playSuccessSound();
-        confetti({ particleCount: 300, spread: 150, origin: { y: 0.6 } });
+        confetti({ particleCount: 400, spread: 100, origin: { y: 0.5 } });
         
-        updateUI('win', null);
         return "SYSTEM ONLINE";
     }
     return "Nothing to interact with.";
