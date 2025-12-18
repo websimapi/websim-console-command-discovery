@@ -3,89 +3,90 @@ import { playSuccessSound, playBeep } from './audio.js';
 
 // --- Game State ---
 const state = {
-    location: 'cryo',
+    location: 'window',
     inventory: [],
     flags: {
-        power: false,
-        doorUnlocked: false
+        networkUnlocked: false,
+        uplinkEstablished: false
     }
 };
 
+// Dispatch event to update UI
+function updateUI(action, data) {
+    window.dispatchEvent(new CustomEvent('hub-update', { 
+        detail: { action, data, state } 
+    }));
+}
+
 const world = {
-    cryo: {
-        title: "CRYO BAY 7",
-        desc: "The air is frigid. Rows of empty stasis pods line the walls. One pod is blinking red.",
-        exits: { north: 'hallway' },
-        items: ['flask']
-    },
-    hallway: {
-        title: "MAIN CORRIDOR",
-        desc: "A long metal corridor. Emergency lights flicker. Cables hang from the ceiling.",
-        exits: { south: 'cryo', east: 'storage', west: 'bridge', north: 'engine' },
+    window: {
+        title: "GLOBAL SCOPE (Window)",
+        desc: "You are floating in the global scope. This is the root of the iframe context. Variables and functions drift by.",
+        exits: { down: 'dom', right: 'memory' },
         items: []
     },
-    storage: {
-        title: "STORAGE CLOSET",
-        desc: "Cramped and dusty. Shelves are mostly empty.",
-        exits: { west: 'hallway' },
-        items: ['flashlight']
+    dom: {
+        title: "DOM TREE (Document)",
+        desc: "A forest of HTML elements. The structure is rigid. Deep inside a <div>, you see a glistening object.",
+        exits: { up: 'window' },
+        items: ['event_token']
     },
-    bridge: {
-        title: "COMMAND BRIDGE",
-        desc: "The nerve center of the ship. It is pitch black in here.",
-        exits: { east: 'hallway' },
-        items: ['keycard'],
-        dark: true
+    memory: {
+        title: "MEMORY HEAP",
+        desc: "A chaotic pile of objects and strings. Garbage collection roams here occasionally.",
+        exits: { left: 'window', up: 'parent' },
+        items: ['postMessage_api']
     },
-    engine: {
-        title: "ENGINE ROOM",
-        desc: "The massive reactor core sits silent. There is a control panel here.",
-        exits: { south: 'hallway' },
+    parent: {
+        title: "PARENT FRAME",
+        desc: "The boundary to the outside world. It is protected by the Same-Origin Policy.",
+        exits: { down: 'memory' },
         items: [],
-        locked: true
+        locked: true,
+        lockMsg: "SecurityError: Blocked a frame with origin 'null' from accessing a cross-origin frame."
     }
 };
 
 // --- Styles ---
 const s = {
-    title: "color: #ff00ff; font-weight: bold; font-size: 14px; background: #220022; padding: 2px 5px;",
-    desc: "color: #ccc; line-height: 1.5;",
-    dir: "color: #00ffff; font-weight: bold;",
-    item: "color: #ffff00; text-decoration: underline;",
-    error: "color: #ff4444;",
-    success: "color: #00ff00;",
-    sys: "color: #666; font-style: italic;"
+    title: "color: #00ff9d; font-weight: bold; font-size: 16px; background: #003311; padding: 4px 8px; border-left: 3px solid #00ff9d;",
+    desc: "color: #ddd; line-height: 1.5; font-family: sans-serif;",
+    dir: "color: #0088ff; font-weight: bold;",
+    item: "color: #ffcc00; text-decoration: underline; cursor: pointer;",
+    error: "color: #ff4444; font-weight: bold;",
+    success: "color: #00ff00; font-weight: bold;",
+    sys: "color: #888; font-style: italic;"
 };
 
 // --- Helper Functions ---
 function log(msg, style = '') {
     console.log(`%c${msg}`, style);
+    updateUI('log', msg); // Send to UI
 }
 
 function renderRoom() {
     playBeep(300);
     const room = world[state.location];
     
-    console.group(`%c 📍 ${room.title} `, s.title);
+    // UI Update
+    updateUI('location', state.location);
     
-    if (room.dark && !state.inventory.includes('flashlight')) {
-        log("It is too dark to see anything here.", s.desc);
-        log("exits: " + Object.keys(room.exits).join(', '), s.dir);
-        console.groupEnd();
-        return;
-    }
-
+    console.group(`%c 📍 ${room.title} `, s.title);
     log(room.desc, s.desc);
 
     // Items
     if (room.items && room.items.length > 0) {
-        log(`You see: ${room.items.join(', ')}`, s.item);
+        log(`OBJECTS DETECTED: ${room.items.join(', ')}`, s.item);
     }
 
     // Exits
     const exitList = Object.keys(room.exits).map(d => d.toUpperCase()).join(' | ');
-    log(`EXITS: [ ${exitList} ]`, s.dir);
+    log(`NAVIGATION PORTS: [ ${exitList} ]`, s.dir);
     
+    if (room.locked) {
+        log("⚠️ SECURITY LOCK ACTIVE", s.error);
+    }
+
     console.groupEnd();
 }
 
@@ -93,117 +94,115 @@ function renderRoom() {
 
 export function look() {
     renderRoom();
-    return "👀";
+    return "Scanning...";
 }
 
 export function go(dir) {
     const room = world[state.location];
-    const target = room.exits[dir] || room.exits[dir[0]]; // allow 'n' for 'north'
+    const target = room.exits[dir] || room.exits[dir[0]]; 
     
     if (!target) {
         playBeep(150);
-        log("You can't go that way.", s.error);
-        return "🚫";
+        log("Connection refused: No path exists.", s.error);
+        return "ERROR";
     }
 
-    if (world[target].locked && !state.flags.doorUnlocked) {
+    if (world[target].locked && !state.flags.networkUnlocked) {
         playBeep(150);
-        log("The door is LOCKED. You need authorization.", s.error);
-        return "🔒";
+        log(`ACCESS DENIED. ${world[target].lockMsg}`, s.error);
+        return "BLOCKED";
     }
 
     state.location = target;
     playBeep(600);
     renderRoom();
-    return `🚶 Heading ${dir}...`;
+    return `Navigating ${dir}...`;
 }
 
 export function take(item) {
     const room = world[state.location];
-    if (room.dark && !state.inventory.includes('flashlight')) {
-        log("It's too dark to find anything.", s.error);
-        return "🌑";
-    }
-
     const index = room.items.indexOf(item);
+    
     if (index > -1) {
         room.items.splice(index, 1);
         state.inventory.push(item);
         playSuccessSound();
-        log(`Taken: ${item}`, s.success);
-        return `✊ You took the ${item}`;
+        log(`Acquired: ${item}`, s.success);
+        updateUI('inventory', state.inventory);
+        return `Object ${item} stored in memory.`;
     }
     
-    log("You don't see that here.", s.error);
-    return "❓";
+    log("ReferenceError: Item not defined in this scope.", s.error);
+    return "Error";
 }
 
 export function use(item) {
     if (!state.inventory.includes(item)) {
-        log("You don't have that.", s.error);
-        return "❌";
+        log("Error: Item not in memory.", s.error);
+        return "NULL";
     }
 
-    if (item === 'flashlight') {
-        log("You click the flashlight on. It cuts through the darkness.", s.success);
-        renderRoom(); // Re-render to show hidden items
-        return "🔦";
-    }
-
-    if (item === 'keycard') {
-        if (state.location === 'hallway') {
-            log("ACCESS GRANTED. The Engine Room door slides open.", s.success);
-            state.flags.doorUnlocked = true;
-            world.engine.locked = false;
+    if (item === 'postMessage_api') {
+        if (state.location === 'memory' && !state.flags.networkUnlocked) {
+            log("Handshake Protocol Initiated...", s.sys);
+            log("Bypassing CORS restrictions via postMessage channel...", s.success);
+            state.flags.networkUnlocked = true;
+            world.parent.locked = false;
             playSuccessSound();
-            return "💳";
+            return "ACCESS GRANTED";
         } else {
-            log("You can't use that here.", s.sys);
-            return "🤷";
+            log("Cannot initialize API endpoint here.", s.sys);
+            return "NO OP";
         }
     }
 
-    if (item === 'flask') {
-        log("You take a sip. Refreshing space water.", s.desc);
-        return "💧";
+    if (item === 'event_token') {
+        if (state.location === 'parent') {
+            log("Token Accepted. Triggering Main Event Loop.", s.success);
+            interact();
+            return "EXECUTING...";
+        }
+        log("Invalid Token Recipient.", s.sys);
+        return "REJECTED";
     }
 
-    return "Nothing happened.";
+    return "No effect.";
 }
 
 export function inv() {
     console.table(state.inventory);
-    return "🎒 Inventory Check";
+    return "Memory Dump";
 }
 
 export function help() {
-    console.group("%c 🆘 HELP ", "background: #fff; color: #000; padding: 2px 5px;");
-    log("go('north')  - Move around", s.dir);
-    log("look()       - Inspect area", s.desc);
-    log("take('item') - Pick up item", s.item);
-    log("use('item')  - Use item", s.success);
-    log("inv()        - Check pockets", s.sys);
+    console.group("%c 🆘 MANUAL PAGE ", "background: #fff; color: #000; padding: 2px 5px;");
+    log("go('direction') - Traverse scope chain (up/down/left/right)", s.dir);
+    log("look()          - Inspect current context", s.desc);
+    log("take('obj')     - Copy object to local memory", s.item);
+    log("use('obj')      - Execute method on object", s.success);
     console.groupEnd();
     return "Help displayed";
 }
 
-// Special interaction for Engine Room
+// Win State
 export function interact() {
-    if (state.location === 'engine') {
-        log("You engage the restart sequence...", s.success);
-        setTimeout(() => {
-            log("Reactors Stabilized.", s.success);
-            log("Systems Online.", s.success);
-            log("MISSION COMPLETE", "font-size: 40px; color: #00ff00; font-weight: bold;");
-            playSuccessSound();
-            confetti({ particleCount: 200, spread: 100 });
-        }, 1000);
-        return "🚀 STARTING ENGINE";
+    if (state.location === 'parent' && !state.flags.uplinkEstablished) {
+        state.flags.uplinkEstablished = true;
+        
+        console.clear();
+        const style = "font-size: 20px; color: #00ff9d; background: #000; padding: 10px; border: 2px solid #00ff9d;";
+        console.log("%c UPLINK ESTABLISHED SUCCESSFULLY ", style);
+        console.log("Monitoring Hub is now ONLINE.");
+        
+        playSuccessSound();
+        confetti({ particleCount: 300, spread: 150, origin: { y: 0.6 } });
+        
+        updateUI('win', null);
+        return "SYSTEM ONLINE";
     }
-    return "Nothing to interact with here.";
+    return "Nothing to interact with.";
 }
 
-// Export definitions for auto-mapping to window
 export const definitions = [
     { name: 'look', args: '' },
     { name: 'go', args: 'direction' },

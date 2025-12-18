@@ -3,12 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console Command Discovery</title>
+    <title>Iframe Context Uplink</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="terminal-screen">
-        <div class="blink">_</div>
+    <div class="hub-container">
+        <header class="hub-header">
+            <div class="logo">IFRAME :: CONTEXT :: MONITOR</div>
+            <div class="status-indicator" id="uplink-status">STATUS: OFFLINE</div>
+        </header>
+
+        <main class="hub-grid">
+            <!-- Left: System Info / Instructions -->
+            <section class="panel info-panel">
+                <h3>SYSTEM INSTRUCTIONS</h3>
+                <div class="content">
+                    <p>Welcome, Developer.</p>
+                    <p>This interface is running inside an isolated <strong>&lt;iframe&gt;</strong> container.</p>
+                    <p>To establish the Uplink, you must navigate the JavaScript Runtime Environment manually via the <strong>DevTools Console</strong>.</p>
+                    <br>
+                    <div class="instruction-box">
+                        <strong>HOW TO PLAY:</strong>
+                        <ol>
+                            <li>Open DevTools (F12 or Ctrl+Shift+I).</li>
+                            <li>Switch Console Context to this iframe (Top Left of Console).</li>
+                            <li>Type <span class="cmd">look()</span> to assess your environment.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Visualizer -->
+            <section class="panel viz-panel">
+                <h3>ENVIRONMENT SCAN</h3>
+                <div id="scan-display" class="scan-grid">
+                    <div class="grid-cell" id="loc-window">WINDOW<br><small>(Current)</small></div>
+                    <div class="grid-cell dim" id="loc-dom">DOM TREE</div>
+                    <div class="grid-cell dim" id="loc-memory">MEMORY HEAP</div>
+                    <div class="grid-cell locked" id="loc-parent">PARENT FRAME<br>🔒</div>
+                </div>
+                <div id="log-feed">Waiting for input...</div>
+            </section>
+        </main>
+
+        <footer class="hub-footer">
+            <div class="stat">MEMORY: <span id="mem-stat">--</span></div>
+            <div class="stat">LATENCY: <span id="lat-stat">--</span>ms</div>
+            <div class="stat">PROTOCOL: <span id="proto-stat">HTTP/1.1</span></div>
+        </footer>
     </div>
 
     <!-- Import Map -->
